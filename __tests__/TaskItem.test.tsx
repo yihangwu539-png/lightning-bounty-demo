@@ -54,4 +54,27 @@ describe("TaskItem", () => {
     fireEvent.click(screen.getByLabelText(/delete task/i));
     expect(onDelete).toHaveBeenCalledWith("task-1");
   });
+
+  it("does not render checkbox when onSelectChange not provided", () => {
+    render(<TaskItem task={task} projectId="proj-1" />);
+    expect(screen.queryByTestId("select-task-task-1")).toBeNull();
+  });
+
+  it("renders checkbox when onSelectChange is provided", () => {
+    const onSelectChange = vi.fn();
+    render(<TaskItem task={task} projectId="proj-1" onSelectChange={onSelectChange} />);
+    expect(screen.getByTestId("select-task-task-1")).toBeInTheDocument();
+  });
+
+  it("calls onSelectChange with id and checked when checkbox clicked", () => {
+    const onSelectChange = vi.fn();
+    render(<TaskItem task={task} projectId="proj-1" onSelectChange={onSelectChange} />);
+    fireEvent.click(screen.getByTestId("select-task-task-1"));
+    expect(onSelectChange).toHaveBeenCalledWith("task-1", true);
+  });
+
+  it("shows checkbox as checked when selected is true", () => {
+    render(<TaskItem task={task} projectId="proj-1" selected={true} onSelectChange={vi.fn()} />);
+    expect(screen.getByTestId("select-task-task-1")).toBeChecked();
+  });
 });

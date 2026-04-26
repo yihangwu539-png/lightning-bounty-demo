@@ -34,4 +34,90 @@ describe("TaskList", () => {
     render(<TaskList tasks={tasks} projectId="p1" />);
     expect(screen.getByText(/3 of 3 tasks/i)).toBeInTheDocument();
   });
+
+  it("renders select-all checkbox when there are tasks", () => {
+    render(<TaskList tasks={tasks} projectId="p1" />);
+    expect(screen.getByTestId("select-all-checkbox")).toBeInTheDocument();
+  });
+
+  it("renders individual task checkboxes", () => {
+    render(<TaskList tasks={tasks} projectId="p1" />);
+    expect(screen.getByTestId("select-task-1")).toBeInTheDocument();
+    expect(screen.getByTestId("select-task-2")).toBeInTheDocument();
+    expect(screen.getByTestId("select-task-3")).toBeInTheDocument();
+  });
+
+  it("selects all tasks when select-all is clicked", () => {
+    render(<TaskList tasks={tasks} projectId="p1" />);
+    fireEvent.click(screen.getByTestId("select-all-checkbox"));
+    expect(screen.getByTestId("select-all-checkbox")).toBeChecked();
+    expect(screen.getByTestId("select-task-1")).toBeChecked();
+    expect(screen.getByTestId("select-task-2")).toBeChecked();
+    expect(screen.getByTestId("select-task-3")).toBeChecked();
+  });
+
+  it("shows bulk action bar with count when tasks are selected", () => {
+    render(<TaskList tasks={tasks} projectId="p1" />);
+    fireEvent.click(screen.getByTestId("select-task-1"));
+    expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
+    expect(screen.getByText(/1 selected/i)).toBeInTheDocument();
+    expect(screen.getByTestId("bulk-done-button")).toBeInTheDocument();
+    expect(screen.getByTestId("bulk-delete-button")).toBeInTheDocument();
+    expect(screen.getByTestId("bulk-clear-button")).toBeInTheDocument();
+  });
+
+  it("clears selection via clear button", () => {
+    render(<TaskList tasks={tasks} projectId="p1" />);
+    fireEvent.click(screen.getByTestId("select-task-1"));
+    expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("bulk-clear-button"));
+    expect(screen.queryByTestId("bulk-action-bar")).toBeNull();
+  });
+
+  it("calls onDelete for each selected task on bulk delete", () => {
+    const onDelete = vi.fn();
+    render(<TaskList tasks={tasks} projectId="p1" onDelete={onDelete} />);
+    fireEvent.click(screen.getByTestId("select-all-checkbox"));
+    fireEvent.click(screen.getByTestId("bulk-delete-button"));
+    expect(onDelete).toHaveBeenCalledTimes(3);
+    expect(onDelete).toHaveBeenCalledWith("1");
+    expect(onDelete).toHaveBeenCalledWith("2");
+    expect(onDelete).toHaveBeenCalledWith("3");
+  });
+
+  it("hides bulk action bar after bulk delete clears selection", () => {
+    const onDelete = vi.fn();
+    render(<TaskList tasks={tasks} projectId="p1" onDelete={onDelete} />);
+    fireEvent.click(screen.getByTestId("select-all-checkbox"));
+    expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("bulk-delete-button"));
+    expect(screen.queryByTestId("bulk-action-bar")).toBeNull();
+  });
+
+  it("hides bulk action bar after bulk done clears selection", () => {
+    render(<TaskList tasks={tasks} projectId="p1" />);
+    fireEvent.click(screen.getByTestId("select-all-checkbox"));
+    expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("bulk-done-button"));
+    expect(screen.queryByTestId("bulk-action-bar")).toBeNull();
+  });
+
+  it("partial select shows bulk action bar", () => {
+    render(<TaskList tasks={tasks} projectId="p1" />);
+    // Select only one task
+    fireEvent.click(screen.getByTestId("select-task-1"));
+    expect(screen.getByTestId("bulk-action-bar")).toBeInTheDocument();
+    expect(screen.getByText(/1 selected/i)).toBeInTheDocument();
+    // Select a second task
+    fireEvent.click(screen.getByTestId("select-task-2"));
+    expect(screen.getByText(/2 selected/i)).toBeInTheDocument();
+  });
+
+  it("deselect removes from bulk count", () => {
+    render(<TaskList tasks={tasks} projectId="p1" />);
+    fireEvent.click(screen.getByTestId("select-task-1"));
+    expect(screen.getByText(/1 selected/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("select-task-1"));
+    expect(screen.queryByTestId("bulk-action-bar")).toBeNull();
+  });
 });

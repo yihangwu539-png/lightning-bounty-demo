@@ -9,6 +9,8 @@ interface TaskItemProps {
   task: Task;
   projectId: string;
   onDelete?: (id: string) => void;
+  selected?: boolean;
+  onSelectChange?: (id: string, checked: boolean) => void;
 }
 
 const priorityDot: Record<string, string> = {
@@ -17,9 +19,20 @@ const priorityDot: Record<string, string> = {
   low: "bg-zinc-400",
 };
 
-export function TaskItem({ task, projectId, onDelete }: TaskItemProps) {
+export function TaskItem({ task, projectId, onDelete, selected = false, onSelectChange }: TaskItemProps) {
   return (
     <div className="border border-[--border] bg-[--surface] px-4 py-3 flex items-start gap-3 group hover:border-[--accent] transition-colors">
+      {/* Selection checkbox */}
+      {onSelectChange && (
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={(e) => onSelectChange(task.id, e.target.checked)}
+          className="mt-1.5 shrink-0 accent-[--accent]"
+          aria-label={`Select task ${task.title}`}
+          data-testid={`select-task-${task.id}`}
+        />
+      )}
       {/* Priority indicator */}
       <span
         className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${priorityDot[task.priority]}`}
