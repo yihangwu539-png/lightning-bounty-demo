@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { Project, Task } from "@/lib/types";
 import { ProjectCard } from "./ProjectCard";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { searchProjects } from "@/lib/search";
 
 interface ProjectListProps {
@@ -32,11 +33,12 @@ export function ProjectList({ projects, tasks }: ProjectListProps) {
 
   if (projects.length === 0) {
     return (
-      <div className="border border-dashed border-[--border] p-16 text-center">
-        {/* No illustration yet — bounty gap #1 */}
-        <p className="font-display text-xl text-[--text-muted] mb-2">No projects yet</p>
-        <p className="text-sm text-[--text-muted]">Create your first project to get started</p>
-      </div>
+      <EmptyState
+        title="No projects yet"
+        description="Create your first project to get started"
+        actionLabel="New project"
+        actionHref="/projects/new"
+      />
     );
   }
 
