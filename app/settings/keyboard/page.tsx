@@ -6,6 +6,7 @@ const SHORTCUTS = [
   { key: "p", description: "Go to Projects" },
   { key: "s", description: "Go to Stats" },
   { key: ",", description: "Go to Settings" },
+  { key: "t", description: "Toggle Pomodoro timer" },
   { key: "?", description: "Show keyboard shortcuts panel" },
   { key: "/", description: "Focus search (when visible)" },
   { key: "Escape", description: "Close modal / dismiss" },

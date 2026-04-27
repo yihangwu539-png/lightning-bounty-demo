@@ -1,8 +1,10 @@
-import type { Project, Task } from "./types";
+import type { Project, Task, PomodoroConfig, PomodoroState } from "./types";
 import { SEED_PROJECTS, SEED_TASKS } from "./seed";
 
 const PROJECTS_KEY = "pt_projects";
 const TASKS_KEY = "pt_tasks";
+const POMODORO_CONFIG_KEY = "pt_pomodoro_config";
+const POMODORO_STATE_KEY = "pt_pomodoro_state";
 
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
@@ -97,4 +99,51 @@ export function clearAll(): void {
 
 export function exportRaw(): { projects: Project[]; tasks: Task[] } {
   return { projects: getProjects(), tasks: getTasks() };
+}
+
+// ─── Pomodoro Timer ────────────────────────────────────────────────
+
+const DEFAULT_POMODORO_CONFIG: PomodoroConfig = {
+  workDuration: 25,
+  shortBreakDuration: 5,
+  longBreakDuration: 15,
+  longBreakInterval: 4,
+  sessionsCompleted: 0,
+  autoStartBreaks: false,
+  autoStartPomodoros: false,
+  soundEnabled: true,
+};
+
+const DEFAULT_POMODORO_STATE: PomodoroState = {
+  phase: "work",
+  timeRemaining: DEFAULT_POMODORO_CONFIG.workDuration * 60,
+  isRunning: false,
+  currentSession: 0,
+};
+
+export function getPomodoroConfig(): PomodoroConfig {
+  return readJSON<PomodoroConfig>(POMODORO_CONFIG_KEY) ?? { ...DEFAULT_POMODORO_CONFIG };
+}
+
+export function savePomodoroConfig(config: PomodoroConfig): void {
+  writeJSON(POMODORO_CONFIG_KEY, config);
+}
+
+export function getPomodoroState(): PomodoroState {
+  return readJSON<PomodoroState>(POMODORO_STATE_KEY) ?? { ...DEFAULT_POMODORO_STATE };
+}
+
+export function savePomodoroState(state: PomodoroState): void {
+  writeJSON(POMODORO_STATE_KEY, state);
+}
+
+export function resetPomodoroState(config: PomodoroConfig): PomodoroState {
+  const state: PomodoroState = {
+    phase: "work",
+    timeRemaining: config.workDuration * 60,
+    isRunning: false,
+    currentSession: 0,
+  };
+  savePomodoroState(state);
+  return state;
 }

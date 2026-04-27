@@ -3,6 +3,7 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { SkipLink } from "@/components/ui/SkipLink";
 import { AuthGuard } from "@/components/AuthGuard";
+import { PomodoroWidget } from "@/components/pomodoro/PomodoroWidget";
 
 export const metadata: Metadata = {
   title: "Project Tracker",
@@ -21,6 +22,7 @@ export default function RootLayout({
         <ToastProvider>
           <AuthGuard>{children}</AuthGuard>
         </ToastProvider>
+        <PomodoroWidget />
       </body>
     </html>
   );

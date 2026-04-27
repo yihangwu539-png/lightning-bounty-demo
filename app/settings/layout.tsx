@@ -7,6 +7,7 @@ const SETTINGS_NAV = [
   { href: "/settings/profile", label: "Profile" },
   { href: "/settings/appearance", label: "Appearance" },
   { href: "/settings/keyboard", label: "Keyboard" },
+  { href: "/settings/pomodoro", label: "Pomodoro" },
   { href: "/settings/data", label: "Data" },
 ];
 

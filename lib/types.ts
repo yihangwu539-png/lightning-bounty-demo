@@ -70,3 +70,23 @@ export interface FilterConfig {
   search?: string;
   assignee?: string;
 }
+
+export type PomodoroPhase = "work" | "shortBreak" | "longBreak";
+
+export interface PomodoroConfig {
+  workDuration: number;      // minutes
+  shortBreakDuration: number; // minutes
+  longBreakDuration: number;  // minutes
+  longBreakInterval: number;  // sessions before long break
+  sessionsCompleted: number;
+  autoStartBreaks: boolean;
+  autoStartPomodoros: boolean;
+  soundEnabled: boolean;
+}
+
+export interface PomodoroState {
+  phase: PomodoroPhase;
+  timeRemaining: number;     // seconds
+  isRunning: boolean;
+  currentSession: number;     // current pomodoro session count (for tracking long breaks)
+}
