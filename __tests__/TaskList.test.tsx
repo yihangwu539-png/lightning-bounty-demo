@@ -62,7 +62,7 @@ describe("TaskList", () => {
       // Simulate drag: drop third item (index 2) onto first item (index 0)
       fireEvent.dragStart(items[2], { dataTransfer: { setData: vi.fn(), getData: vi.fn(() => "2") } });
       fireEvent.dragOver(items[0]);
-      fireEvent.drop(items[0], { dataTransfer: { setData: vi.fn(), getData: vi.fn(() -> "2") } });
+      fireEvent.drop(items[0], { dataTransfer: { setData: vi.fn(), getData: vi.fn(() => "2") } });
 
       expect(onReorder).toHaveBeenCalledOnce();
       const reordered = onReorder.mock.calls[0][0] as Task[];
