@@ -9,7 +9,9 @@ import {
   getTask,
   deleteTask,
   clearAll,
+  updateTaskOrder,
 } from "@/lib/storage";
+import { reorderTasks } from "@/lib/sort";
 import type { Project, Task } from "@/lib/types";
 
 function makeProject(id: string): Project {
@@ -24,7 +26,7 @@ function makeProject(id: string): Project {
   };
 }
 
-function makeTask(id: string, projectId: string): Task {
+function makeTask(id: string, projectId: string, order = 0): Task {
   return {
     id,
     projectId,
@@ -35,6 +37,7 @@ function makeTask(id: string, projectId: string): Task {
     tags: [],
     assignee: "",
     dueDate: null,
+    order,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -117,5 +120,82 @@ describe("storage — tasks", () => {
     saveTask(t);
     deleteTask("del-task");
     expect(getTask("del-task")).toBeNull();
+  });
+
+  describe("updateTaskOrder", () => {
+    it("persists reordered tasks for a project", () => {
+      clearAll();
+      localStorage.clear();
+
+      const t1 = makeTask("a", "proj-1", 0);
+      const t2 = makeTask("b", "proj-1", 1);
+      const t3 = makeTask("c", "proj-1", 2);
+      saveTask(t1);
+      saveTask(t2);
+      saveTask(t3);
+
+      // Reorder: move t3 (index 2) to index 0
+      const projectTasks = getTasks("proj-1");
+      const reordered = reorderTasks(projectTasks, 2, 0);
+      updateTaskOrder(reordered);
+
+      const stored = getTasks("proj-1");
+      expect(stored).toHaveLength(3);
+      // After reorder: c (order=0), a (order=1), b (order=2)
+      expect(stored[0].id).toBe("c");
+      expect(stored[0].order).toBe(0);
+      expect(stored[1].id).toBe("a");
+      expect(stored[1].order).toBe(1);
+      expect(stored[2].id).toBe("b");
+      expect(stored[2].order).toBe(2);
+    });
+
+    it("does not affect tasks from other projects", () => {
+      clearAll();
+      localStorage.clear();
+
+      saveTask(makeTask("a", "proj-1", 0));
+      saveTask(makeTask("b", "proj-1", 1));
+      saveTask(makeTask("x", "proj-2", 0));
+
+      const reordered = reorderTasks(getTasks("proj-1"), 1, 0);
+      updateTaskOrder(reordered);
+
+      const otherTasks = getTasks("proj-2");
+      expect(otherTasks).toHaveLength(1);
+      expect(otherTasks[0].id).toBe("x");
+      expect(otherTasks[0].order).toBe(0);
+    });
+  });
+});
+
+describe("sort — reorderTasks", () => {
+  it("moves a task from one index to another and recomputes order values", () => {
+    const tasks = [
+      makeTask("a", "p1", 0),
+      makeTask("b", "p1", 1),
+      makeTask("c", "p1", 2),
+    ];
+    const result = reorderTasks(tasks, 2, 0);
+    expect(result.map((t) => t.id)).toEqual(["c", "a", "b"]);
+    expect(result.map((t) => t.order)).toEqual([0, 1, 2]);
+  });
+
+  it("moves a task downward", () => {
+    const tasks = [
+      makeTask("a", "p1", 0),
+      makeTask("b", "p1", 1),
+      makeTask("c", "p1", 2),
+      makeTask("d", "p1", 3),
+    ];
+    const result = reorderTasks(tasks, 0, 2);
+    expect(result.map((t) => t.id)).toEqual(["b", "c", "a", "d"]);
+    expect(result.map((t) => t.order)).toEqual([0, 1, 2, 3]);
+  });
+
+  it("handles no-op move (same index)", () => {
+    const tasks = [makeTask("a", "p1", 0), makeTask("b", "p1", 1)];
+    const result = reorderTasks(tasks, 1, 1);
+    expect(result.map((t) => t.id)).toEqual(["a", "b"]);
   });
 });
