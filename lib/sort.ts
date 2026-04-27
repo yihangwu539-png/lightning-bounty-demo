@@ -17,6 +17,9 @@ export function sortTasks(tasks: Task[], config: SortConfig): Task[] {
       case "status":
         cmp = STATUS_ORDER_TASK[a.status] - STATUS_ORDER_TASK[b.status];
         break;
+      case "order":
+        cmp = a.order - b.order;
+        break;
       case "createdAt":
         cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         break;
@@ -49,4 +52,12 @@ export function sortProjects(projects: Project[], config: SortConfig): Project[]
     }
     return config.direction === "asc" ? cmp : -cmp;
   });
+}
+
+/** Reorder a task within a list and re-compute `order` values for all tasks in the project. */
+export function reorderTasks(tasks: Task[], fromIndex: number, toIndex: number): Task[] {
+  const result = [...tasks];
+  const [moved] = result.splice(fromIndex, 1);
+  result.splice(toIndex, 0, moved);
+  return result.map((t, i) => ({ ...t, order: i }));
 }

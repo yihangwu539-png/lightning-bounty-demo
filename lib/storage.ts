@@ -89,6 +89,16 @@ export function deleteTask(id: string): void {
   writeJSON(TASKS_KEY, tasks);
 }
 
+/** Persist a reordered list of tasks (all tasks for the project, with updated order fields). */
+export function updateTaskOrder(reordered: Task[]): void {
+  if (reordered.length === 0) return;
+  const all = getTasks();
+  const projectId = reordered[0].projectId;
+  // Merge the reordered tasks back into the full list
+  const others = all.filter((t) => t.projectId !== projectId);
+  writeJSON(TASKS_KEY, [...others, ...reordered]);
+}
+
 export function clearAll(): void {
   if (!isBrowser()) return;
   localStorage.removeItem(PROJECTS_KEY);

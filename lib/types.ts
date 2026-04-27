@@ -18,6 +18,7 @@ export interface Task {
   tags: Tag[];
   assignee: string;
   dueDate: string | null;
+  order: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -55,7 +56,7 @@ export interface StatsSnapshot {
   tasksByPriority: Record<TaskPriority, number>;
 }
 
-export type SortField = "name" | "createdAt" | "updatedAt" | "priority" | "status";
+export type SortField = "name" | "createdAt" | "updatedAt" | "priority" | "status" | "order";
 export type SortDirection = "asc" | "desc";
 
 export interface SortConfig {
