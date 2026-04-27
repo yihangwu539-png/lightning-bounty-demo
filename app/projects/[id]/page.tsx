@@ -10,7 +10,7 @@ import { Modal } from "@/components/ui/Modal";
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { Button } from "@/components/ui/Button";
 import { TagBadge } from "@/components/tags/TagBadge";
-import { getProject, getTasks, saveTask, deleteTask, deleteProject } from "@/lib/storage";
+import { getProject, getTasks, saveTask, deleteTask, deleteProject, updateTaskOrder } from "@/lib/storage";
 import { useToast } from "@/components/ui/ToastProvider";
 import type { Project, Task } from "@/lib/types";
 
@@ -34,7 +34,8 @@ export default function ProjectDetailPage() {
 
   function handleAddTask(data: Omit<Task, "id" | "createdAt" | "updatedAt">) {
     const now = new Date().toISOString();
-    const task: Task = { ...data, id: `task-${Date.now()}`, createdAt: now, updatedAt: now };
+    const maxOrder = tasks.reduce((max, t) => Math.max(max, t.order), -1);
+    const task: Task = { ...data, id: `task-${Date.now()}`, order: maxOrder + 1, createdAt: now, updatedAt: now };
     saveTask(task);
     setTasks((prev) => [...prev, task]);
     setShowTaskModal(false);
@@ -45,6 +46,17 @@ export default function ProjectDetailPage() {
     deleteTask(taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
     showToast("Task deleted", "info");
+  }
+
+  function handleReorder(reordered: Task[]) {
+    updateTaskOrder(reordered);
+    setTasks((prev) => {
+      // Merge the reordered tasks back with any tasks not in the reordered list
+      const otherIds = new Set(reordered.map((t) => t.id));
+      const others = prev.filter((t) => !otherIds.has(t.id));
+      return [...others, ...reordered];
+    });
+    showToast("Tasks reordered", "success");
   }
 
   function handleDeleteProject() {
@@ -127,7 +139,7 @@ export default function ProjectDetailPage() {
           <h2 className="font-display font-semibold text-[--text] mb-4">
             Tasks ({tasks.length})
           </h2>
-          <TaskList tasks={tasks} projectId={id} onDelete={handleDeleteTask} />
+          <TaskList tasks={tasks} projectId={id} onDelete={handleDeleteTask} onReorder={handleReorder} />
         </div>
       </main>
 
