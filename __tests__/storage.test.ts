@@ -9,8 +9,11 @@ import {
   getTask,
   deleteTask,
   clearAll,
+  exportRaw,
+  waitForInit,
 } from "@/lib/storage";
 import type { Project, Task } from "@/lib/types";
+import { SEED_PROJECTS, SEED_TASKS } from "@/lib/seed";
 
 function makeProject(id: string): Project {
   return {
@@ -117,5 +120,53 @@ describe("storage — tasks", () => {
     saveTask(t);
     deleteTask("del-task");
     expect(getTask("del-task")).toBeNull();
+  });
+});
+
+describe("storage — exportRaw", () => {
+  it("returns projects and tasks", () => {
+    clearAll();
+    localStorage.clear();
+    const p = makeProject("exp-proj");
+    saveProject(p);
+    saveTask(makeTask("exp-task", "exp-proj"));
+    const data = exportRaw();
+    expect(data.projects.length).toBeGreaterThanOrEqual(1);
+    expect(data.tasks.length).toBeGreaterThanOrEqual(1);
+    expect(data.projects.find((x) => x.id === "exp-proj")).toBeTruthy();
+  });
+});
+
+describe("storage — localStorage migration compat", () => {
+  it("reads from localStorage when IndexedDB is not available (jsdom fallback)", () => {
+    // In jsdom, IndexedDB is not available — our module falls back to localStorage
+    clearAll();
+    localStorage.clear();
+    const p = makeProject("migrate-proj");
+    saveProject(p);
+    const stored = localStorage.getItem("pt_projects");
+    expect(stored).toBeTruthy();
+    const parsed = JSON.parse(stored!);
+    expect(parsed.find((x: Project) => x.id === "migrate-proj")).toBeTruthy();
+  });
+
+  it("preserves data across sessions (localStorage roundtrip)", () => {
+    clearAll();
+    localStorage.clear();
+    saveProject(makeProject("roundtrip-1"));
+    saveProject(makeProject("roundtrip-2"));
+    // Simulate fresh load by reading directly from localStorage
+    const raw = localStorage.getItem("pt_projects");
+    const projects = JSON.parse(raw!) as Project[];
+    expect(projects).toHaveLength(2);
+    // Re-fetch via API layer
+    expect(getProject("roundtrip-1")).not.toBeNull();
+    expect(getProject("roundtrip-2")).not.toBeNull();
+  });
+});
+
+describe("storage — waitForInit", () => {
+  it("resolves without error", async () => {
+    await expect(waitForInit()).resolves.toBeUndefined();
   });
 });
