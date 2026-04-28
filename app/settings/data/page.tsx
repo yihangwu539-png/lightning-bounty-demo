@@ -59,7 +59,6 @@ export default function DataPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     await processTasksFile(file);
-    // Reset input so the same file can be re-imported
     if (tasksInputRef.current) tasksInputRef.current.value = "";
   }
 
@@ -78,7 +77,6 @@ export default function DataPage() {
       const { items, errors } = parseTasksCSV(raw, projects);
 
       if (errors.length > 0) {
-        // Show first few errors
         const msg =
           errors.length > 3
             ? `${errors[0]}\n${errors[1]}\n...and ${errors.length - 2} more`
@@ -94,16 +92,9 @@ export default function DataPage() {
         return;
       }
 
-      // Merge strategy: skip duplicates by title within project
       const existing = getTasks();
       const { tasks: merged, skipped } = mergeTasks(existing, items);
 
-      // Save all merged tasks — we need to write the whole array
-      // Since storage only has saveTask (write single), clear and rewrite
-      const { projects: allProjects } = exportRaw();
-      // We'll use localStorage directly for the bulk write
-      const { default: storage } = await import("@/lib/storage");
-      // Use the existing saveTask pattern: for non-duplicates, save each
       const newTasks = merged.slice(existing.length);
       for (const task of newTasks) {
         saveTask(task);
@@ -261,17 +252,15 @@ export default function DataPage() {
                 id="import-tasks-csv"
                 aria-label="Select tasks CSV file to import"
               />
-              <label htmlFor="import-tasks-csv">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={importing}
-                  aria-label="Import tasks CSV"
-                  as="span"
-                >
-                  {importing ? "Importing…" : "Import"}
-                </Button>
-              </label>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={importing}
+                aria-label="Import tasks CSV"
+                onClick={() => tasksInputRef.current?.click()}
+              >
+                {importing ? "Importing…" : "Import"}
+              </Button>
             </div>
           </div>
           <div className="flex items-center justify-between border-t border-[--border] pt-3">
@@ -294,17 +283,15 @@ export default function DataPage() {
                 id="import-projects-csv"
                 aria-label="Select projects CSV file to import"
               />
-              <label htmlFor="import-projects-csv">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={importing}
-                  aria-label="Import projects CSV"
-                  as="span"
-                >
-                  {importing ? "Importing…" : "Import"}
-                </Button>
-              </label>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={importing}
+                aria-label="Import projects CSV"
+                onClick={() => projectsInputRef.current?.click()}
+              >
+                {importing ? "Importing…" : "Import"}
+              </Button>
             </div>
           </div>
         </div>
